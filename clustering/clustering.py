@@ -11,6 +11,18 @@ from nltk.tokenize import word_tokenize
 from collections import defaultdict
 import pickle
 
+class Cluster():
+    
+    def __init__(self, first_word):
+        self.words = []
+        self.words.append(first_word)
+
+    def addWord(self, word):
+        self.words.append(word)
+
+    def listWords(self):
+        return self.words
+
 
 def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
@@ -71,4 +83,9 @@ else:
 for pair in sorted_word_frequencies[0:10]:
     print("{0} {1}".format(pair[0], pair[1]))
 
-
+# Create starting clusters for each of the first 1000 most-common words
+clusters = []
+num_clusters = 1000
+for i in range(num_clusters):
+    c = Cluster(sorted_word_frequencies[i][0])
+    clusters.append(c)

@@ -1,1 +1,0 @@
-This folder contains everything relating to Brown Clustering.
