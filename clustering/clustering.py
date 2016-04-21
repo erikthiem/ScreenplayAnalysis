@@ -7,7 +7,18 @@
 
 import sqlite3
 import os
+from nltk.tokenize import word_tokenize
+from collections import defaultdict
+import pickle
 
+
+def save_obj(obj, name):
+    with open(name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(name):
+    with open(name + '.pkl', 'rb') as f:
+        return pickle.load(f)
 
 # File information
 database_file_name = 'lines_by_genre.db'
@@ -23,9 +34,41 @@ if not os.path.isfile(database):
 conn = sqlite3.connect(database)
 c = conn.cursor()
 c.execute('SELECT * FROM lines;')
-all_results = c.fetchall()
+entries = c.fetchall()
 conn.commit()
 conn.close()
 
-lines = [entry[1] for entry in all_results]
+lines = [entry[1] for entry in entries]
+'''
+vocab = {}
+
+count = 0
+
+for index, item in enumerate(lines[0:100]):
+    words = word_tokenize(item.lower())
+    for word in words:
+        vocab[word] = index
+    count += 1
+
+vocab_size = len(vocab)
+print vocab_size
+'''
+# See if word frequencies were previously saved
+if os.path.isfile("sorted_word_frequencies.pkl"):
+    sorted_word_frequencies = load_obj("sorted_word_frequencies")
+else:
+    word_frequencies = defaultdict(int)
+    for line in lines:
+        words = word_tokenize(line.lower())
+        for word in words:
+            word_frequencies[word] += 1
+
+    sorted_word_frequencies = sorted(word_frequencies.items(), reverse=True, key=lambda item: item[1])
+
+    # Save word frequencies for future use
+    save_obj(sorted_word_frequencies, "sorted_word_frequencies")
+ 
+for pair in sorted_word_frequencies[0:10]:
+    print("{0} {1}".format(pair[0], pair[1]))
+
 
