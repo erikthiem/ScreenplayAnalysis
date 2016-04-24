@@ -10,6 +10,7 @@ import os
 from nltk.tokenize import word_tokenize
 from collections import defaultdict
 import pickle
+import random
 
 class Cluster():
     
@@ -20,9 +21,9 @@ class Cluster():
     def addWord(self, word):
         self.words.append(word)
 
-    def listWords(self):
-        return self.words
-
+    def merge(self, other_cluster):
+        for word in other_cluster.words:
+            self.words.append(word)
 
 def save_obj(obj, name):
     with open(name + '.pkl', 'wb') as f:
@@ -31,6 +32,29 @@ def save_obj(obj, name):
 def load_obj(name):
     with open(name + '.pkl', 'rb') as f:
         return pickle.load(f)
+
+# Returns the "quality" measure between two clusters
+def qualityOfMerge(c1, c2):
+    return random.random()
+
+
+# Returns the index of the cluster in 'clusters'
+# into which would be best to merge new_cluster
+def bestMergeIndex(clusters, new_cluster):
+
+    max_quality_merge = 0 
+    max_quality_merge_index = 0
+
+    for i in range(len(clusters)):
+        c = clusters[i]
+        quality = qualityOfMerge(c, new_cluster)
+
+        if quality > max_quality_merge:
+            max_quality_merge = quality
+            max_quality_merge_index = i
+
+    return clusters[max_quality_merge_index]
+
 
 # File information
 database_file_name = 'lines_by_genre.db'
@@ -79,13 +103,25 @@ else:
 
     # Save word frequencies for future use
     save_obj(sorted_word_frequencies, "sorted_word_frequencies")
- 
-for pair in sorted_word_frequencies[0:10]:
-    print("{0} {1}".format(pair[0], pair[1]))
 
+vocab_size = 2000 #len(sorted_word_frequencies)
+ 
 # Create starting clusters for each of the first 1000 most-common words
 clusters = []
 num_clusters = 1000
 for i in range(num_clusters):
     c = Cluster(sorted_word_frequencies[i][0])
     clusters.append(c)
+
+# Add the rest of the words to the existing clusters
+for i in range(num_clusters, vocab_size):
+
+    # Create a new cluster for the next word
+    new_cluster = Cluster(sorted_word_frequencies[i][0]) 
+    
+    # Merge the new cluster into one of the 1000 clusters
+    # for which it is most similar
+    bestMergeIndex(clusters, new_cluster).merge(new_cluster)
+
+for c in clusters:
+    print c.words
